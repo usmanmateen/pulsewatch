@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>PulseWatch — Fitbit Air wear reminders and personal health summaries</title>
+    <meta
+      name="description"
+      content="PulseWatch is a personal, non-commercial app that reads read-only Google Health data to remind you when your Fitbit Air has been left off your wrist, and to send short sleep and recovery summaries."
+    />
+    <link rel="canonical" href="https://usmanmateen.github.io/pulsewatch/" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href="./"><img src="assets/favicon.svg" alt="" />PulseWatch</a>
+        <nav class="links" aria-label="Site">
+          <a href="./" aria-current="page">Home</a>
+          <a href="privacy/">Privacy policy</a>
+          <a href="terms/">Terms of service</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="wrap">
+      <h1>PulseWatch</h1>
+      <p class="lead">
+        A personal companion for the Fitbit Air. It notices when the tracker has been left off your wrist —
+        after a shower, say — and reminds you on your phone, with a short summary of sleep and recovery each
+        morning.
+      </p>
+
+      <div class="note">
+        <p>
+          <strong>Not a medical device.</strong> PulseWatch is informational. It does not diagnose, treat or
+          monitor any medical condition and must not be relied on in an emergency.
+        </p>
+      </div>
+
+      <h2>What it does</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Off-wrist reminders</h3>
+          <p>
+            If the tracker keeps syncing but records no heart rate for about half an hour, you get one
+            reminder, dismissed again when you put it back on (where the ntfy app supports it). It tells a
+            removed tracker apart from one that is out of range or out of battery.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Movement nudges</h3>
+          <p>A gentle prompt after about 90 minutes without a movement break, only during waking hours.</p>
+        </div>
+        <div class="card">
+          <h3>Morning brief</h3>
+          <p>
+            Last night's sleep, resting heart rate, heart-rate variability, respiratory rate and yesterday's
+            steps, in one notification. Anything unavailable is simply left out.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Personal trends</h3>
+          <p>
+            A notice when resting heart rate or heart-rate variability has been outside your own usual range
+            for several days in a row — compared with your own history, never population norms.
+          </p>
+        </div>
+      </div>
+
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li>Your Fitbit Air syncs to the Google Health app as usual.</li>
+        <li>
+          Every 10 minutes, PulseWatch — a small program running on Cloudflare Workers — reads a minimal set
+          of recent data through the Google Health API, using read-only access that you grant through Google's
+          consent screen.
+        </li>
+        <li>Simple, transparent rules decide whether anything is worth telling you. Usually nothing is.</li>
+        <li>When it is, a notification is delivered to your phone through the ntfy notification service.</li>
+      </ol>
+
+      <h2>Why PulseWatch asks for Google Health access</h2>
+      <p>PulseWatch requests four read-only permissions and uses each for a specific feature:</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Permission</th>
+              <th scope="col">Used for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Health metrics and measurements (read-only)</td>
+              <td>
+                The time of your most recent heart-rate reading and, for the last few hours, whether heart
+                rate was recorded in each 5-minute window (to tell whether the tracker is being worn), plus
+                daily resting heart rate, heart-rate variability and respiratory rate for the morning brief
+                and personal trends.
+              </td>
+            </tr>
+            <tr>
+              <td>Activity and fitness (read-only)</td>
+              <td>Recent step counts for movement nudges, and yesterday's total steps for the brief.</td>
+            </tr>
+            <tr>
+              <td>Sleep (read-only)</td>
+              <td>Last night's main sleep: when it started and ended and how long you slept.</td>
+            </tr>
+            <tr>
+              <td>Settings (read-only)</td>
+              <td>
+                When your tracker last synced and its battery level, so a flat battery or an unsynced phone is
+                not mistaken for a removed tracker.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        PulseWatch never writes to your Google Health data, and does not request location, ECG, nutrition,
+        profile or reproductive-health data.
+      </p>
+
+      <h2>Privacy at a glance</h2>
+      <ul>
+        <li>Read-only access, limited to what the features above need.</li>
+        <li>
+          To detect a removed tracker, PulseWatch downloads only the <em>time</em> of the latest heart-rate
+          reading, not the reading itself.
+        </li>
+        <li>
+          Only one summary value per metric per day is stored, for up to 120 days. Minute-by-minute readings
+          are never stored.
+        </li>
+        <li>
+          No advertising, no selling of data, no analytics or tracking, and no AI or machine-learning
+          training.
+        </li>
+        <li>
+          You can revoke access at any time from your
+          <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.
+        </li>
+      </ul>
+      <p>The <a href="privacy/">privacy policy</a> describes exactly what is accessed, stored and shared.</p>
+
+      <h2>Who runs PulseWatch</h2>
+      <p>
+        PulseWatch is a personal, non-commercial project, built and operated by its developer (GitHub:
+        <a href="https://github.com/usmanmateen">@usmanmateen</a>) for personal use. It is not sold or offered
+        as a public service. See the <a href="terms/">terms of service</a>.
+      </p>
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <span>© 2026 PulseWatch · Not a medical device</span>
+        <nav class="links" aria-label="Legal">
+          <a href="privacy/">Privacy policy</a>
+          <a href="terms/">Terms of service</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
