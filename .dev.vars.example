@@ -1,0 +1,25 @@
+# Copy to .dev.vars for local development (`npm run secrets:init` creates it for you).
+# .dev.vars is git-ignored. Never put real values in this example file.
+
+# demo = synthetic data through the real pipeline; remove to use real Google data locally.
+MODE=demo
+
+# Bearer token for /status and /admin/* (32+ characters). `npm run secrets:init` generates one.
+STATUS_TOKEN=
+
+# Notifications (wrangler.jsonc selects NOTIFY_PROVIDER=telegram). Without these, demo mode logs
+# notifications to the console. `npm run telegram:setup -- --dev-vars --no-upload` fills them in.
+# TELEGRAM_BOT_TOKEN=
+# TELEGRAM_CHAT_ID=
+
+# To use ntfy instead: NOTIFY_PROVIDER=ntfy and a topic of 20-64 chars of A-Z a-z 0-9 - _
+# (effectively a password on public ntfy.sh).
+# NOTIFY_PROVIDER=ntfy
+NTFY_TOPIC=
+# Optional: access token for a protected or self-hosted ntfy server.
+# NTFY_TOKEN=
+
+# Only needed to run against real Google data locally (`npm run oauth -- --dev-vars`).
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# GOOGLE_REFRESH_TOKEN=

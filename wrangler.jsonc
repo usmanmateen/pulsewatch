@@ -1,0 +1,72 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pulsewatch",
+  // Account ids are identifiers, not credentials; pinning it avoids an account prompt.
+  "account_id": "3504f85ca2ded6f95e746bc9e10f3e2e",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-20",
+  "workers_dev": true,
+  "preview_urls": false,
+  // Smaller bundle = less parse time under the 10 ms CPU budget; source maps keep stack traces readable.
+  "minify": true,
+  "upload_source_maps": true,
+  // 100% sampling is fine at ~1,500 invocations/day (well within the free 200,000 log events)
+  // and makes every run visible in Workers Logs.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  // One trigger (of the 5 the free plan allows per account), every minute: minutes 0, 10, 20…
+  // run the full check, the others a cheap wear check (see scopeForSlot in src/pipeline/check.ts).
+  // Crons fire in UTC; local-time decisions (waking hours, morning brief) happen in code.
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "MODE": "live",
+    "TIME_ZONE": "Europe/London",
+    // Where notifications go. Telegram (secrets TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID; run
+    // `npm run telegram:setup`) is reliable from Workers. Public ntfy.sh limits messages per IP,
+    // and Cloudflare's shared egress IPs exhaust that quota daily (see ARCHITECTURE.md).
+    "NOTIFY_PROVIDER": "telegram",
+    "NTFY_URL": "https://ntfy.sh",
+    // OAuth client ID: public configuration, not a secret (it appears in every consent URL);
+    // the secret parts (client secret, refresh token) are Cloudflare secrets.
+    "GOOGLE_CLIENT_ID": "307624716052-9rm0rqnp7klba55pl316e6i6h9p6vdvq.apps.googleusercontent.com",
+    // Rule thresholds; see src/config/schema.ts for every option and its default.
+    // The Google OAuth app is In production, so no fixed refresh-token lifetime is set
+    // (serviceHealth.refreshTokenLifetimeDays is only for apps kept in "Testing").
+    // Personal choices (defaults in brackets): off-wrist after 5 minutes without heart rate [30],
+    // confirmed by one check [2], 15 minutes between reminders [60], and alerts overnight as well
+    // [held until waking hours]. Fastest reminders, at the cost of some during showers or
+    // charging and the occasional one from a brief gap in readings.
+    "PULSEWATCH_CONFIG": {
+      "rules": {
+        "deviceOffWrist": {
+          "staleAfterMinutes": 5,
+          "confirmationChecks": 1,
+          "cooldownMinutes": 15,
+          "notifyDuringSleepHours": true,
+        },
+        "serviceHealth": { "notifyDuringSleepHours": true },
+      },
+    },
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pulsewatch",
+      // Existing database; the id identifies it but grants nothing without account credentials.
+      "database_id": "001df5d5-3790-4f48-8ff9-955c74c2e29e",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "queues": {
+    "producers": [{ "binding": "NOTIFICATIONS", "queue": "pulsewatch-notifications" }],
+    "consumers": [
+      {
+        "queue": "pulsewatch-notifications",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        // D1 enforces the real attempt limit (default 5); this is only a backstop.
+        "max_retries": 10,
+        "max_concurrency": 1,
+      },
+    ],
+  },
+}
